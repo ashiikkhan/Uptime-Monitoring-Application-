@@ -1,18 +1,12 @@
-/**
- * title : handle request and response
- */
-
-// dependencies
 const url = require('url');
 const { StringDecoder } = require('string_decoder');
 const routes = require('../routes');
 const { notFoundHandler } = require('../handlers/routeHandlers/notFoundHandler');
+const { parseJSON } = require('./utilities');
 
-// handler object - module scaffolding
-const handler = {};
-handler.handleReqRes = (req, res) => {
-    // request handle
-    // get the url and parse it
+const handleReqRes = {};
+
+handleReqRes.handleReqRes = (req, res) => {
     const parsedUrl = url.parse(req.url, true);
     const path = parsedUrl.pathname;
     const trimmedPath = path.replace(/^\/+|\/+$/g, '');
@@ -21,34 +15,37 @@ handler.handleReqRes = (req, res) => {
     const headersObject = req.headers;
 
     const requestProperties = {
-        path,
         parsedUrl,
+        path,
         trimmedPath,
         method,
         queryStringObject,
         headersObject,
     };
+
     const decoder = new StringDecoder('utf-8');
     let realData = '';
-
     const chosenHandler = routes[trimmedPath] ? routes[trimmedPath] : notFoundHandler;
-    chosenHandler(requestProperties, (statCode, payld) => {
-        const statusCode = typeof statCode === 'number' ? statCode : 500;
-        const payload = typeof payld === 'object' ? payld : {};
 
-        const paloadString = JSON.stringify(payload);
-
-        // return the final res
-        res.writeHead(statusCode);
-        res.end(paloadString);
-    });
     req.on('data', (buffer) => {
         realData += decoder.write(buffer);
     });
     req.on('end', () => {
         realData += decoder.end();
-        console.log(realData);
-        res.end('Hello Programmers!');
+
+        requestProperties.body = parseJSON(realData);
+
+        chosenHandler(requestProperties, (statCode, paylod) => {
+            const statusCode = typeof statCode === 'number' ? statCode : 500;
+            const payload = typeof paylod === 'object' ? paylod : {};
+
+            const payloadString = JSON.stringify(payload);
+
+            res.setHeader('content-type', 'application/json');
+            res.writeHead(statusCode);
+            res.end(payloadString);
+        });
     });
 };
-module.exports = handler;
+
+module.exports = handleReqRes;

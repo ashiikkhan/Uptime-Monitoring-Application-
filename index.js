@@ -1,31 +1,22 @@
-/**
- * Title: Uptime Monitoring Application.
- * Description: A RESTFul Api to monitor up or down time of user defined links.
- */
-
-// dependencies
 const http = require('http');
-
 const { handleReqRes } = require('./helpers/handleReqRes');
+const environmentToExport = require('./helpers/environments');
+const data = require('./lib/data');
 
-// app object - module scafolding
 const app = {};
 
-// configeration
-app.config = {
-    port: 3000,
-};
+// teseting file system
+// @TODO - will remove data after
+data.delete('test', 'newfile', (error) => {
+    // console.log(error);
+});
 
-// create server
 app.createServer = () => {
     const server = http.createServer(app.handleReqRes);
-    server.listen(app.config.port, () => {
-        console.log(`listening to port: ${app.config.port}`);
+    server.listen(environmentToExport.port, () => {
+        console.log(`listening to port ${environmentToExport.port}`);
     });
 };
-
-// handle request response
 app.handleReqRes = handleReqRes;
 
-// start the server
 app.createServer();

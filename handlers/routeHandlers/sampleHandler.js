@@ -1,12 +1,6 @@
-/**
- * title: sample handler
- */
-// module scaffolding:
 const handler = {};
-
-handler.sampleHandler = (requestProperties, callback) => {
-    console.log(requestProperties);
-
+handler.sampleHandler = (reqProps, callback) => {
+    // console.log(reqProps);
     callback(200, {
         message: 'this is a sample url',
     });

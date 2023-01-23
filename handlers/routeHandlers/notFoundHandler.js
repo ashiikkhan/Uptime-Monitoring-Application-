@@ -1,14 +1,8 @@
-/**
- * title: not found handler
- */
-// module scaffolding:
 const handler = {};
-
-handler.notFoundHandler = (requestProperties, callback) => {
-    console.log(requestProperties);
-
+handler.notFoundHandler = (reqProps, callback) => {
+    // console.log(reqProps);
     callback(404, {
-        message: 'your requested url is not found',
+        message: '404  \n url not found',
     });
 };
 module.exports = handler;
