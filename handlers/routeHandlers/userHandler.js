@@ -26,14 +26,13 @@ handler._users.post = (requestProperties, callback) => {
     const user = requestProperties.body;
     const strLen = (str) => str.trim().length;
 
-    const firstName =        typeof user.firstName === 'string' && strLen(user.firstName) > 0 ? user.firstName : false;
-    const lastName =
-        typeof user.lastName === 'string' && strLen(user.lastName) > 0 ? user.lastName : false;
+    const firstName =
+        typeof user.firstName === 'string' && strLen(user.firstName) > 0 ? user.firstName : false;
+    const lastName =        typeof user.lastName === 'string' && strLen(user.lastName) > 0 ? user.lastName : false;
 
     const phone = typeof user.phone === 'string' && strLen(user.phone) === 11 ? user.phone : false;
 
-    const password =
-        typeof user.password === 'string' && strLen(user.password) > 0 ? user.password : false;
+    const password =        typeof user.password === 'string' && strLen(user.password) > 0 ? user.password : false;
 
     const tosAgreement = typeof user.tosAgreement === 'boolean' ? user.tosAgreement : false;
 
@@ -75,7 +74,8 @@ handler._users.post = (requestProperties, callback) => {
 handler._users.get = (requestProperties, callback) => {
     // check the phone number is valid:
     const query = requestProperties.queryStringObject;
-    const phone =        typeof query.phone === 'string' && query.phone.trim().length === 11 ? query.phone : false;
+    const phone =
+        typeof query.phone === 'string' && query.phone.trim().length === 11 ? query.phone : false;
     if (phone) {
         // look up the user
         data.read('users', phone, (error, usr) => {
@@ -102,17 +102,47 @@ handler._users.put = (requestProperties, callback) => {
     const user = requestProperties.body;
     const strLen = (str) => str.trim().length;
 
-    const firstName =        typeof user.firstName === 'string' && strLen(user.firstName) > 0 ? user.firstName : false;
-    const lastName =
-        typeof user.lastName === 'string' && strLen(user.lastName) > 0 ? user.lastName : false;
+    const firstName =
+        typeof user.firstName === 'string' && strLen(user.firstName) > 0 ? user.firstName : false;
+    const lastName =        typeof user.lastName === 'string' && strLen(user.lastName) > 0 ? user.lastName : false;
 
     const phone = typeof user.phone === 'string' && strLen(user.phone) === 11 ? user.phone : false;
 
-    const password =
-        typeof user.password === 'string' && strLen(user.password) > 0 ? user.password : false;
+    const password =        typeof user.password === 'string' && strLen(user.password) > 0 ? user.password : false;
 
     if (phone) {
         if (firstName || lastName || password) {
+            // look up the user
+            data.read('users', phone, (err1, usrData) => {
+                const userData = { ...parseJSON(usrData) };
+                if (!err1 && userData) {
+                    if (firstName) {
+                        userData.firstName = firstName;
+                    }
+                    if (lastName) {
+                        userData.lastName = lastName;
+                    }
+                    if (firstName) {
+                        userData.password = hash(password);
+                    }
+                    // update to database
+                    data.update('users', phone, userData, (err2) => {
+                        if (!err2) {
+                            callback(200, {
+                                message: 'user was updated succesffully',
+                            });
+                        } else {
+                            callback(500, {
+                                error: 'there was a problem in the server side.',
+                            });
+                        }
+                    });
+                } else {
+                    callback(400, {
+                        error: 'you have a problem in your request.',
+                    });
+                }
+            });
         } else {
             callback(400, {
                 error: 'you have a problem in your request.',
@@ -126,6 +156,30 @@ handler._users.put = (requestProperties, callback) => {
 };
 
 // @TODO: Authentication
-handler._users.delete = (requestProperties, callback) => {};
+handler._users.delete = (requestProperties, callback) => {
+    // check the phone number is valid:
+    const query = requestProperties.queryStringObject;
+    const phone =
+        typeof query.phone === 'string' && query.phone.trim().length === 11 ? query.phone : false;
+
+    if (phone) {
+        //
+        data.read('users', phone, (err1, userData) => {
+            if (!err1 && userData) {
+                data.delete('users', phone, (err2) => {
+                    if (!err2) {
+                        callback(200, { message: 'user succesfully delted' });
+                    } else {
+                        callback(500, { error: 'there was a servier side error' });
+                    }
+                });
+            } else {
+                callback(500, { error: 'there was a servier side error' });
+            }
+        });
+    } else {
+        callback(400, { error: 'there was a problem in your request' });
+    }
+};
 
 module.exports = handler;
